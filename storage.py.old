@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+
+class Storage:
+    _instance = None
+
+
+    def __new__(cls):
+        print 'this is new?'
+        if Storage._instance:
+            return Storage._instance
+        else:
+            return super(Storage, cls).__new__(cls)
+
+    def __init__(self):
+        if not Storage._instance:
+            print 'first time'
+            self.db = {}
+            Storage._instance = self
+            print dir(Storage._instance)
+        else:
+            print 'after first'
+
+    def put(self, instance):
+        class_name = instance.__class__.__name__
+        if class_name in self.db:
+            self.db[class_name].append(instance)
+        else:
+            self.db[class_name] = [instance]
+
+    def get(self, mclass, user=None):
+        class_name = mclass.__name__
+        return self.db[class_name]
+
+    def all(self, name, user=None):
+        class_name = name
+        return self.db[class_name]
+        
