@@ -49,7 +49,7 @@ def clean_amount(amount):
             return amount
     return None
 
-def display_balance(user):
+def format_balance(user):
     """reformat balance to float-like string """
     balance = str(user.balance)
     pre = balance[:-2] if balance[:-2] else '0'
@@ -178,7 +178,7 @@ def check_balance(line):
     if len(line) == 2:
         user = User.get_by_name(line[1])
         if user:#valid user
-            display_balance(user)
+            msg = format_balance(user)
         else:
             msg = ERROR_MSG['U_NOT_EXISTED']
     else:
