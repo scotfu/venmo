@@ -20,6 +20,10 @@ def put(instance):
 def get():
     pass
 
+def destory():
+    global tables
+    tables = {}
+    
 
 def get_all(kls):
     """return a list of all instances of that class """

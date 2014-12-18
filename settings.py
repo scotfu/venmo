@@ -30,7 +30,7 @@ COMMAND = {
 CURRENCY = '$'
 
 FEED_MSG = {
-    'payer' : "You paid %s $%.2f for %s ",
-    'payee' : '%s paid you $%.2f for %s ',
+    'payer' : "You paid %s $%.2f for %s",
+    'payee' : '%s paid you $%.2f for %s',
     
 }

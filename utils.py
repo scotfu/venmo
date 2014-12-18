@@ -2,6 +2,7 @@
 import re
 
 from settings import *
+from models import User, CreditCard, Transaction, Feed
 
 """
 Utils functions
@@ -15,7 +16,7 @@ def clean_user_name(user_name):
     return a valid user name string or None 
     """
     length = len(user_name)
-    if 3 < length < 17:
+    if 3 < length < 16:
         match = re.search('^[a-zA-Z\-_]*$', user_name)
         if match:
             return match.group(0)
@@ -51,8 +52,9 @@ def clean_amount(amount):
 def display_balance(user):
     """reformat balance to float-like string """
     balance = str(user.balance)
-    balance = balance[:-2] + '.' + balance[-2:]
-    print '$%s'%balance
+    pre = balance[:-2] if balance[:-2] else '0'
+    balance = pre + '.' + balance[-2:]
+    return '$%s'%balance
 
 
 def luhn(number):
@@ -73,6 +75,137 @@ def luhn(number):
         return True
     return False
 
+
+def add_user(line):
+    """Logic add a user"""
+    msg  = 0
+    if len(line) == 2:
+        user_name = clean_user_name(line[1])
+        if user_name:#valid user name
+            user = User.get_by_name(user_name)
+            if user:#already has a user with this name
+                msg = ERROR_MSG['U_EXISTED']% user_name
+            else:
+                u = User(user_name)
+                u.save()
+        else:
+            msg = ERROR_MSG['INVALID_NAME']
+    else:
+        msg = ERROR_MSG['INVALID_ARS']
+    return msg
+
+    
+def add_card(line):
+    """Logic add a card"""
+    msg = 0
+    if len(line) == 3:
+        user_name = line[1]
+        card_number = line[2]
+        user = User.get_by_name(user_name)
+        card1 = CreditCard.get_by_user(user)#already have a card?
+        if not card1:
+            card2 = CreditCard.get_by_number(card_number)#fraud card?            
+            if not card2:
+                if user:
+                    if clean_card_number(card_number):
+                        card = CreditCard(user, card_number)
+                        card.save()
+                    else:
+                        msg = ERROR_MSG['INVALID_CARD']
+                else:
+                    msg = ERROR_MSG['U_NOT_EXISTED']
+            else:
+                msg = ERROR_MSG['FRAUD_CARD']
+        else:
+            msg = ERROR_MSG['U_HAS_CARD']
+    else:
+        msg = ERROR_MSG['INVALID_ARS']
+    return msg
+
+    
+def pay(line):
+    """Logic new payment"""
+    msg = 0
+    if len(line) > 4:
+        actor = User.get_by_name(line[1])
+        target = User.get_by_name(line[2])
+        amount = line[3]
+        note = ' '.join(line[4:])
+        actor_card = CreditCard.get_by_user(actor)
+        if actor_card:# actor has a card
+            if actor and target:#both existed
+                if actor != target:#not paying self
+                    amount = clean_amount(amount)
+                    if amount:#valid amount
+                        t = Transaction(actor, target, amount, note)
+                        t.save()
+                    else:
+                        msg = ERROR_MSG['INVLIAD_AMOUNT']
+                else:
+                    msg = ERROR_MSG['PAY_SELF']
+            else:
+                msg = ERROR_MSG['U_NOT_EXISTED']
+        else:
+            msg = ERROR_MSG['U_HAS_NO_CARD']
+                
+    else:
+        msg = ERROR_MSG['INVALID_ARS']
+
+    return msg
+
+    
+def feed(line):
+    """Logic feed"""
+    msg = 0
+    if len(line) == 2:
+        user = User.get_by_name(line[1])
+        if user:#valid user
+            msg = []
+            for f in Feed.filter_by_user(user):
+                msg.append(f.message)
+        else:
+            msg = ERROR_MSG['U_NOT_EXISTED']
+    else:
+        msg = ERROR_MSG['INVALID_ARS']
+    if isinstance(msg,list):
+        msg = '\n'.join(msg)
+    return msg
+
+    
+def check_balance(line):
+    msg = 0
+    """Logic balance"""
+    if len(line) == 2:
+        user = User.get_by_name(line[1])
+        if user:#valid user
+            display_balance(user)
+        else:
+            msg = ERROR_MSG['U_NOT_EXISTED']
+    else:
+        msg = ERROR_MSG['INVALID_ARS']          
+    
+    return msg
+
+    
+def process(line):
+    msg = 0
+    """Flow control, process one line of commands"""
+    line = line.strip().split(' ')
+    #print line
+    if COMMAND['ADD_USER'] == line[0]:
+        msg = add_user(line)
+    elif COMMAND['ADD_CARD'] == line[0]:
+        msg = add_card(line)
+    elif COMMAND['NEW_PAYMENT'] == line[0]:
+        msg = pay(line)
+    elif COMMAND['FEED'] == line[0]:
+        msg = feed(line)
+    elif COMMAND['CHECK_BALANCE'] == line[0]:
+        msg = check_balance(line)
+    else:
+        msg = ERROR_MSG['NOT_REC']
+        
+    return msg
 
 
 
