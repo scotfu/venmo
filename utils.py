@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 import re
 
+from settings import *
+
+"""
+Utils functions
+
+"""
+
+
 def clean_user_name(user_name):
     """take a string as input, then determine if it is a valid user name"""
     length = len(user_name)
@@ -12,8 +20,9 @@ def clean_user_name(user_name):
 
 
 def clean_card_number(card_number):
-    """take a string of numbers as input, then determine if it is a
-       valid credit card number
+    """
+    take a string as input, then determine if it contains
+    valid credit card number
     """
     if 1 < len(card_number) < 20:
         if luhn(card_number):
@@ -21,16 +30,24 @@ def clean_card_number(card_number):
     return None    
 
 def clean_amount(amount):
+    """
+    take a string as input, then determine if it is a valid amount
+    """
     if amount:
-        if amount[0] == '$':
+        if amount[0] == CURRENCY:
             amount = int(float(amount[1:])*100)
             return amount
     return None
 
+def display_balance(user):
+    """reformat balance to float-like string """
+    balance = str(user.balance)
+    balance = balance[:-2] + '.' + balance[-2:]
+    print '$%s'%user.balance
 
 
 def luhn(number):
-    
+    """luhn validation"""
     partial = number[:-1]
     check_digit = number[-1]
     
@@ -42,7 +59,7 @@ def luhn(number):
     
     for digit in odd_digits:
         check_sum += sum(map(int,str(int(digit)*2)))
-#    print check_sum,even_digits,odd_digits, check_sum * 9 % 10, check_digit    
+
     if check_sum * 9 % 10 == int(check_digit):
         return True
     return False

@@ -1,91 +1,135 @@
 #!/usr/bin/env python
 import sys
+import os
+
 from models import User, CreditCard, Transaction, Feed
-from utils import luhn, clean_user_name, clean_amount
+from utils import luhn, clean_user_name, clean_amount, display_balance
+from settings import *
 
-def add_user():
-    pass
+def add_user(line):
+    """Logic add a user"""
+    if len(line) == 2:
+        user_name = clean_user_name(line[1])
+        user = User.get_by_name(user_name)
+        if user:
+            print ERROR_MSG['U_EXISTED']% user_name
+        else:
+            u = User(user_name)
+            u.save()
+    else:
+        print ERROR_MSG['INVALID_ARS']
+    
 
-def is_user_existed(user_name):
-    if user_name in [u.name for u in User.all()]:
-        return True
-    return False
-
-def is_card_existed(card_number):
-    if card_number in [card.card_number for card in CreditCard.all()]:
-        return True
-    return False
-
-def get_user_by_name(user_name):
-    for u in User.all():
-        if u.name == user_name:
-            return u
-    return None
-        
-def get_feed_by_user(user):
-    return filter(lambda f: f.user == user,Feed.all())
-
-
-def process():
-    while True:
-        input = sys.stdin.readline().strip().split(' ')
-        length = len(input)
-        if 'user' == input[0] and length == 2:
-            user_name = clean_user_name(input[1])
-            if user_name:
-                if is_user_existed(user_name):
-                    print 'ERROR: User %s existed'% user_name
-                else:
-                    u = User(user_name)
-                    u.save()
-            else:
-                print 'ERROR: invalid arguments'
-        elif 'add' == input[0] and length == 3:
-            user = input[1]
-            card_number = input[2]
-            if is_user_existed(user):
-                if luhn(card_number):
-                    if is_card_existed(card_number):
-                        print 'Error:that card has already been added by another user, reported for fraud!'                        
-                    else:
-                        user = get_user_by_name(user)
+def add_card(line):
+    """Logic add a card"""    
+    if len(line) == 3:
+        user_name = line[1]
+        card_number = line[2]
+        user = User.get_by_name(user_name)
+        card1 = CreditCard.get_by_user(user)#already have a card?
+        if not card1:
+            card2 = CreditCard.get_by_number(card_number)#fraud card?            
+            if not card2:
+                if user:
+                    if luhn(card_number):
                         card = CreditCard(user, card_number)
                         card.save()
+                    else:
+                        print ERROR_MSG['INVALID_CARD']
                 else:
-                    print 'Error:this card is invalid'
+                    print ERROR_MSG['U_NOT_EXISTED']
             else:
-                print "Error: user not exist"
-        elif 'pay' == input[0]:
-            if length > 4:
-                actor = get_user_by_name(input[1])
-                target = get_user_by_name(input[2])
-                amount = input[3]
-                note = ' '.join(input[4:])
-                if actor and target:
+                print ERROR_MSG['FRAUD_CARD']
+        else:
+            print ERROR_MSG['U_HAS_CARD']
+    else:
+        print ERROR_MSG['INVALID_ARS']
+        
+def pay(line):
+    """Logic new payment"""    
+    if len(line) > 4:
+        actor = User.get_by_name(line[1])
+        target = User.get_by_name(line[2])
+        amount = line[3]
+        note = ' '.join(line[4:])
+        actor_card = CreditCard.get_by_user(actor)
+        if actor_card:
+            if actor and target:
+                if actor != target:
                     amount = clean_amount(amount)
                     if amount:
                         t = Transaction(actor, target, amount, note)
                         t.save()
                     else:
-                        print 'Error: invalid amount'
+                        print ERROR_MSG['INVLIAD_AMOUNT']
                 else:
-                    print 'Error: user(s) not exist'
+                    print ERROR_MSG['PAY_SELF']
             else:
-                print 'ERROR: invalid arguments' 
-        elif 'feed' == input[0]:
-            if length == 2:
-                user = get_user_by_name(input[1])
-                if user:
-                    for f in get_feed_by_user(user):
-                        print f.message
-        elif 'balance' == input[0]:
-            if length == 2:
-                user = get_user_by_name(input[1])
-                if user:
-                    print user.balance
+                print ERROR_MSG['U_NOT_EXISTED']
         else:
-            print 'ERROR: command not recognized'
+            print ERROR_MSG['U_HAS_NO_CARD']
+                
+    else:
+        print ERROR_MSG['INVALID_ARS']
+
+def feed(line):
+    """Logic feed"""
+    if len(line) == 2:
+        user = User.get_by_name(line[1])
+        if user:
+            for f in Feed.filter_by_user(user):
+                print f.message
+        else:
+            print ERROR_MSG['U_NOT_EXISTED']
+    else:
+        print ERROR_MSG['INVALID_ARS']   
+
+def check_balance(line):
+    """Logic balance"""
+    if len(line) == 2:
+        user = User.get_by_name(line[1])
+        if user:
+            display_balance(user)
+        else:
+            print ERROR_MSG['U_NOT_EXISTED']
+    else:
+        print ERROR_MSG['INVALID_ARS']          
+    
+        
+def process(line):
+    """Flow control"""
+    line = line.strip().split(' ')
+    #print line
+    if COMMAND['ADD_USER'] == line[0]:
+        add_user(line)
+    elif COMMAND['ADD_CARD'] == line[0]:
+        add_card(line)
+    elif COMMAND['NEW_PAYMENT'] == line[0]:
+        pay(line)
+    elif COMMAND['FEED'] == line[0]:
+        feed(line)
+    elif COMMAND['CHECK_BALANCE'] == line[0]:
+        check_balance(line)
+    else:
+        print ERROR_MSG['NOT_REC']
             
     
 if __name__ == '__main__':
-    process()
+    """
+    entry point
+    If a file name is serverd, run in file mode,
+    else enter into intercative mode, take input from stdin
+    """
+    if len(sys.argv) == 2:
+        file_name = sys.argv[1]
+        if os.path.isfile(file_name):
+            with open(file_name) as f:
+                for line in f:
+                    process(line)
+        else:
+            print ERROR_MSG['NO_FILE']
+    else:
+        while True:
+            process(sys.stdin.readline())
+        
+    
