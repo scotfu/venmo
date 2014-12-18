@@ -7,7 +7,7 @@ It may take a file name as input then execute every line of that file, otherwise
 
 
 * your design decisions
-OFirst of all, it is about money, so no floating number. Balance is an integer, $100.01 will be saved as 10001 (cents).
+First of all, it is about money, so no floating number. Balance is an integer, $100.01 will be saved as 10001 (cents).
 
 I wanted to do it in the MVC way, so after reading the instrutions, I made the model layer- models.py
 
@@ -19,6 +19,12 @@ get_all will return a list of instances of that class.
 
 View layers and control layers are in utils.py and mini-venmo.py
 
+All meaningful strings has been moved to settings.py, which is easy to maintain.
+
+
+I am in the final week, don't have too much time to write tests.
+Run test using "python test.py" or you could choose any of the test class.
+ 
 * the language you chose, and why you chose it
 The script is in python, I like python.
 
