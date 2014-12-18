@@ -1,13 +1,29 @@
+   
 user Thomas
 user Lisa
-user
+user f
+user fushancong
+user fscsssssssssssssssssssssssssssssssssssss
+user f12323
+user f_-sd
+user --_
+user --f-_
+user test
+user testt
 foobar
 user Quincy
+add fushancong 18
+add test 26
+add testt 2hasiuhduiasd
 add Thomas 4111111111111111
 add Thomas 5454545454545454
 add Lisa 5454545454545454
 add Quincy 1234567890123456
 pay Thomas Lisa $10.25 burritos
+pay fushancong test $10.25111 burritos
+pay fushancong test $0.000a11 haha
+pay fushancong test $10.25111 
+pay fushancong test1 $10.25111 burritos213123
 pay Thomas Quincy $10.00 you're awesome
 pay Lisa Quincy $5.00 pot-luck supplies
 pay Thomas Thomas $1.00 to myself
@@ -16,6 +32,9 @@ add Quincy 5454545454545454
 add Quincy 5555555555554444
 pay Quincy Thomas $14.50 a redbull vodka
 feed Quincy
+feed fushancong1
+feed fushancong
+balance test
 balance Quincy
 feed Thomas
 feed Lisa

@@ -6,6 +6,7 @@ ERROR_MSG = {
 'U_EXISTED': 'ERROR: User %s existed',
 'U_NOT_EXISTED':'ERROR: user(s) not exist',
 'INVALID_ARS': 'ERROR: invalid arguments',
+'INVALID_NAME':'ERROR: this name is invalid',    
 'INVALID_CARD':'ERROR: this card is invalid',
 'U_HAS_CARD': 'ERROR: this user already has a valid credit card',
 'U_HAS_NO_CARD': 'ERROR: this user does not have a credit card',

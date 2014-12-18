@@ -3,19 +3,22 @@ import sys
 import os
 
 from models import User, CreditCard, Transaction, Feed
-from utils import luhn, clean_user_name, clean_amount, display_balance
+from utils import clean_card_number, clean_user_name, clean_amount, display_balance
 from settings import *
 
 def add_user(line):
     """Logic add a user"""
     if len(line) == 2:
         user_name = clean_user_name(line[1])
-        user = User.get_by_name(user_name)
-        if user:
-            print ERROR_MSG['U_EXISTED']% user_name
+        if user_name:#valid user name
+            user = User.get_by_name(user_name)
+            if user:#already has a user with this name
+                print ERROR_MSG['U_EXISTED']% user_name
+            else:
+                u = User(user_name)
+                u.save()
         else:
-            u = User(user_name)
-            u.save()
+            print ERROR_MSG['INVALID_NAME']
     else:
         print ERROR_MSG['INVALID_ARS']
     
@@ -31,7 +34,7 @@ def add_card(line):
             card2 = CreditCard.get_by_number(card_number)#fraud card?            
             if not card2:
                 if user:
-                    if luhn(card_number):
+                    if clean_card_number(card_number):
                         card = CreditCard(user, card_number)
                         card.save()
                     else:
@@ -53,11 +56,11 @@ def pay(line):
         amount = line[3]
         note = ' '.join(line[4:])
         actor_card = CreditCard.get_by_user(actor)
-        if actor_card:
-            if actor and target:
-                if actor != target:
+        if actor_card:# actor has a card
+            if actor and target:#both existed
+                if actor != target:#not paying self
                     amount = clean_amount(amount)
-                    if amount:
+                    if amount:#valid amount
                         t = Transaction(actor, target, amount, note)
                         t.save()
                     else:
@@ -76,7 +79,7 @@ def feed(line):
     """Logic feed"""
     if len(line) == 2:
         user = User.get_by_name(line[1])
-        if user:
+        if user:#valid user
             for f in Feed.filter_by_user(user):
                 print f.message
         else:
@@ -88,7 +91,7 @@ def check_balance(line):
     """Logic balance"""
     if len(line) == 2:
         user = User.get_by_name(line[1])
-        if user:
+        if user:#valid user
             display_balance(user)
         else:
             print ERROR_MSG['U_NOT_EXISTED']
@@ -97,7 +100,7 @@ def check_balance(line):
     
         
 def process(line):
-    """Flow control"""
+    """Flow control, process one line of commands"""
     line = line.strip().split(' ')
     #print line
     if COMMAND['ADD_USER'] == line[0]:

@@ -10,7 +10,10 @@ Utils functions
 
 
 def clean_user_name(user_name):
-    """take a string as input, then determine if it is a valid user name"""
+    """
+    take a string as input, then determine if it is a valid user name
+    return a valid user name string or None 
+    """
     length = len(user_name)
     if 3 < length < 17:
         match = re.search('^[a-zA-Z\-_]*$', user_name)
@@ -21,21 +24,27 @@ def clean_user_name(user_name):
 
 def clean_card_number(card_number):
     """
-    take a string as input, then determine if it contains
-    valid credit card number
+    take a string as input, then determine if it contains a
+    valid credit card number,return a string of that card number or None
     """
     if 1 < len(card_number) < 20:
-        if luhn(card_number):
-            return card_number
+        if re.search('^[0-9]*$', card_number):
+            if luhn(card_number):
+                return card_number
     return None    
 
 def clean_amount(amount):
     """
     take a string as input, then determine if it is a valid amount
+    digits after the second right to . will be ignored.
+    return a int number in cents
     """
     if amount:
         if amount[0] == CURRENCY:
-            amount = int(float(amount[1:])*100)
+            try:
+                amount = int(float(amount[1:])*100)
+            except Exception,e:
+                amount = None
             return amount
     return None
 
@@ -43,7 +52,7 @@ def display_balance(user):
     """reformat balance to float-like string """
     balance = str(user.balance)
     balance = balance[:-2] + '.' + balance[-2:]
-    print '$%s'%user.balance
+    print '$%s'%balance
 
 
 def luhn(number):
